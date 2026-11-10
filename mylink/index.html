@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mylink - 숫자 야구</title>
+<style>
+  :root { --bg:#eef6ee; --ink:#1c3321; --accent:#2e7d32; --card:#ffffff; --line:#cfe3d0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#121c14; --ink:#e6f3e7; --accent:#6fcf76; --card:#1b2a1d; --line:#2f4a33; }
+  }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); color:var(--ink); font-family:"Noto Sans KR",system-ui,sans-serif; }
+  main { background:var(--card); padding:28px; border-radius:16px; width:min(92vw,380px); }
+  h1 { margin:0 0 6px; font-size:1.5rem; text-align:center; }
+  .desc { margin:0 0 16px; font-size:.9rem; text-align:center; }
+  input { width:100%; box-sizing:border-box; padding:12px; font-size:1.3rem; letter-spacing:.4em;
+    border-radius:8px; border:2px solid var(--accent); background:transparent; color:var(--ink); text-align:center; }
+  button { margin-top:10px; width:100%; padding:12px; font-size:1rem; border:0; border-radius:8px;
+    background:var(--accent); color:#fff; cursor:pointer; }
+  #msg { min-height:1.4em; margin:10px 0 0; font-weight:700; text-align:center; }
+  ul { list-style:none; padding:0; margin:12px 0 0; max-height:240px; overflow-y:auto; }
+  li { display:flex; justify-content:space-between; padding:8px 4px; border-bottom:1px solid var(--line); }
+  .num { font-weight:700; letter-spacing:.2em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>숫자 야구</h1>
+  <p class="desc">중복 없는 3자리 숫자를 맞혀보세요.<br>자리까지 맞으면 스트라이크, 숫자만 맞으면 볼, 없으면 아웃!</p>
+  <input id="guess" type="text" inputmode="numeric" maxlength="3" placeholder="000">
+  <button id="btn">확인</button>
+  <p id="msg"></p>
+  <ul id="log"></ul>
+  <button id="reset" hidden>다시 하기</button>
+</main>
+<script>
+  let answer = [], tries = 0;
+  const $ = id => document.getElementById(id);
+
+  function makeAnswer() {
+    const pool = [0,1,2,3,4,5,6,7,8,9];
+    const r = [];
+    while (r.length < 3) r.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    return r;
+  }
+
+  function start() {
+    answer = makeAnswer();
+    tries = 0;
+    $("log").innerHTML = "";
+    $("msg").textContent = "";
+    $("guess").value = "";
+    $("guess").disabled = false;
+    $("btn").hidden = false;
+    $("reset").hidden = true;
+    $("guess").focus();
+  }
+
+  function check() {
+    const v = $("guess").value;
+    if (!/^\d{3}$/.test(v)) { $("msg").textContent = "숫자 3자리를 입력하세요."; return; }
+    if (new Set(v).size !== 3) { $("msg").textContent = "겹치는 숫자는 쓸 수 없어요."; return; }
+
+    const g = v.split("").map(Number);
+    let s = 0, b = 0;
+    g.forEach((n, i) => {
+      if (n === answer[i]) s++;
+      else if (answer.includes(n)) b++;
+    });
+    tries++;
+
+    const result = (s === 0 && b === 0) ? "아웃" : s + "S " + b + "B";
+    const li = document.createElement("li");
+    li.innerHTML = '<span>' + tries + '회</span><span class="num">' + v + '</span><span>' + result + '</span>';
+    $("log").prepend(li);
+    $("guess").value = "";
+
+    if (s === 3) {
+      $("msg").textContent = "정답! " + tries + "번 만에 맞혔어요.";
+      $("guess").disabled = true;
+      $("btn").hidden = true;
+      $("reset").hidden = false;
+    } else {
+      $("msg").textContent = "";
+    }
+  }
+
+  $("btn").addEventListener("click", check);
+  $("guess").addEventListener("keydown", e => { if (e.key === "Enter") check(); });
+  $("reset").addEventListener("click", start);
+  start();
+</script>
+</body>
+</html>
